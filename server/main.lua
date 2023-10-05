@@ -426,14 +426,20 @@ AddEventHandler("redemrp_inventory:drop",function(data, letterSend)
                     itemData.imgsrc
                 )
             else
+                local tempId = ('tempid_%s'):format(_source)
+                AddPickupServer({
+                    id = tempId,
+                    coords = vector3(0, 0, 0), -- tempcoords
+                    name = data.name,
+                    amount = data.amount,
+                    meta = data.meta,
+                    label = itemData.label,
+                    imgsrc = itemData.imgsrc,
+                })
                 TriggerClientEvent(
                     "redemrp_inventory:CreatePickup",
                     _source,
-                    data.name,
-                    data.amount,
-                    data.meta,
-                    itemData.label,
-                    itemData.imgsrc
+                    tempId
                 )
             end
             if itemData.type == "item_weapon" then
@@ -497,20 +503,37 @@ AddEventHandler(
 RegisterServerEvent("redemrp_inventory:AddPickupServer")
 AddEventHandler(
     "redemrp_inventory:AddPickupServer",
-    function(name, amount, meta, label, img, x, y, z, id)
-        DroppedItems[id] = {
-            name = name,
-            meta = meta,
-            amount = amount,
-            label = label,
-            img = img,
-            inRange = false,
-            coords = {x = x, y = y, z = z},
-            time = os.time()
-        }
-        TriggerClientEvent("redemrp_inventory:UpdatePickups", -1, DroppedItems)
+    function(tempId, itemCoords, netId)
+        local data = DroppedItems[tempId]
+        if data then
+            DroppedItems[netId] = {
+                name = data.name,
+                meta = data.meta,
+                amount = data.amount,
+                label = data.label,
+                img = data.img,
+                inRange = data.inRange,
+                coords = {x = itemCoords.x, y = itemCoords.y, z = itemCoords.z},
+                time = data.time
+            }
+            DroppedItems[tempId] = nil -- Remove the original entry
+            TriggerClientEvent("redemrp_inventory:UpdatePickups", -1, DroppedItems)
+        end
     end
 )
+
+function AddPickupServer(data)
+    DroppedItems[data.id] = {
+        name = data.name,
+        meta = data.meta,
+        amount = data.amount,
+        label = data.label,
+        img = data.imgsrc,
+        inRange = false,
+        coords = {x = data.coords.x, y = data.coords.y, z = data.coords.z},
+        time = os.time()
+    }
+end
 
 local otodropitemdelete = 120 -- second for each item
 Citizen.CreateThread(function()
@@ -1441,27 +1464,40 @@ function SharedInventoryFunctions.getItem(source, name, meta)
                         output = addItem(name, canBeAdded, data.ItemMeta, identifier, charid, lvl)
                         if amount - canBeAdded > 0 then
                             if makepickup == nil or makepickup == true then
+                                local tempId = ('tempid_%s'):format(_source)
+                                AddPickupServer({
+                                    id = tempId,
+                                    coords = vector3(0, 0, 0), -- tempcoords
+                                    name = name,
+                                    amount = amount - canBeAdded,
+                                    meta = data.ItemMeta,
+                                    label = data.ItemInfo.label,
+                                    imgsrc = data.ItemInfo.imgsrc,
+                                })
                                 TriggerClientEvent(
                                     "redemrp_inventory:CreatePickup",
                                     _source,
-                                    name,
-                                    amount - canBeAdded,
-                                    data.ItemMeta,
-                                    data.ItemInfo.label,
-                                    data.ItemInfo.imgsrc
+                                    tempId
                                 )
                             end
                         end
                     else
+                        local tempId = ('tempid_%s'):format(_source)
+                        AddPickupServer({
+                            id = tempId,
+                            coords = vector3(0, 0, 0), -- tempcoords
+                            name = name,
+                            amount = amount,
+                            meta = data.ItemMeta,
+                            label = data.ItemInfo.label,
+                            imgsrc = data.ItemInfo.imgsrc,
+                        })
                         TriggerClientEvent(
                             "redemrp_inventory:CreatePickup",
                             _source,
-                            name,
-                            amount,
-                            data.ItemMeta,
-                            data.ItemInfo.label,
-                            data.ItemInfo.imgsrc
+                            tempId
                         )
+
                         TriggerClientEvent("redemrp_inventory:removeWeapon", _source, data.ItemInfo.weaponHash)
                     end
                 end
@@ -1510,14 +1546,21 @@ function SharedInventoryFunctions.getItem(source, name, meta)
                         if canBeAdded > 0 then
                             if makepickup == nil or makepickup == true then
                                 output = addItem(name, canBeAdded, meta, identifier, charid, lvl)
+
+                                local tempId = ('tempid_%s'):format(_source)
+                                AddPickupServer({
+                                    id = tempId,
+                                    coords = vector3(0, 0, 0), -- tempcoords
+                                    name = name,
+                                    amount = amount - canBeAdded,
+                                    meta = meta or {},
+                                    label = data.ItemInfo.label,
+                                    imgsrc = data.ItemInfo.imgsrc,
+                                })
                                 TriggerClientEvent(
                                     "redemrp_inventory:CreatePickup",
                                     _source,
-                                    name,
-                                    amount - canBeAdded,
-                                    meta or {},
-                                    data.ItemInfo.label,
-                                    data.ItemInfo.imgsrc
+                                    tempId
                                 )
                             else
                                 output = false
@@ -1526,14 +1569,21 @@ function SharedInventoryFunctions.getItem(source, name, meta)
                     else
                         local freeWeight = Config.MaxWeight - InventoryWeight[identifier .. "_" .. charid]
                         if freeWeight < data.ItemInfo.weight then
+                            
+                            local tempId = ('tempid_%s'):format(_source)
+                            AddPickupServer({
+                                id = tempId,
+                                coords = vector3(0, 0, 0), -- tempcoords
+                                name = name,
+                                amount = amount,
+                                meta = meta or {},
+                                label = data.ItemInfo.label,
+                                imgsrc = data.ItemInfo.imgsrc,
+                            })
                             TriggerClientEvent(
                                 "redemrp_inventory:CreatePickup",
                                 _source,
-                                name,
-                                amount,
-                                meta or {},
-                                data.ItemInfo.label,
-                                data.ItemInfo.imgsrc
+                                tempId
                             )
                         else
                             output = addItem(name, amount, meta, identifier, charid, lvl)

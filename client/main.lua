@@ -680,7 +680,7 @@ end
 
 RegisterNetEvent(
     "redemrp_inventory:CreatePickup",
-    function(name, amount, meta, label, img)
+    function(tempId)
         local ped = PlayerPedId()
         local coords = GetEntityCoords(ped)
         local forward = GetEntityForwardVector(ped)
@@ -696,14 +696,8 @@ RegisterNetEvent(
         local _coords = GetEntityCoords(obj)
         TriggerServerEvent(
             "redemrp_inventory:AddPickupServer",
-            name,
-            amount,
-            meta,
-            label,
-            img,
-            _coords.x,
-            _coords.y,
-            _coords.z,
+            tempId,
+            _coords,
             ObjToNet(obj)
         )
         PlaySoundFrontend("show_info", "Study_Sounds", true, 0)
