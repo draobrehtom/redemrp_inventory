@@ -680,7 +680,7 @@ end
 
 RegisterNetEvent(
     "redemrp_inventory:CreatePickup",
-    function(tempId)
+    function()
         local ped = PlayerPedId()
         local coords = GetEntityCoords(ped)
         local forward = GetEntityForwardVector(ped)
@@ -696,7 +696,6 @@ RegisterNetEvent(
         local _coords = GetEntityCoords(obj)
         TriggerServerEvent(
             "redemrp_inventory:AddPickupServer",
-            tempId,
             _coords,
             ObjToNet(obj)
         )

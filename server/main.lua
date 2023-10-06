@@ -403,7 +403,6 @@ AddEventHandler("redemrp_inventory:drop",function(data, letterSend)
             itemData.imgsrc
         )
     elseif itemData.canBeDropped then
-        print("drop")
         local user = RedEM.GetPlayer(_source)
         local identifier = user.GetIdentifier()
         local charid = user.GetActiveCharacter()
@@ -426,7 +425,7 @@ AddEventHandler("redemrp_inventory:drop",function(data, letterSend)
                     itemData.imgsrc
                 )
             else
-                local tempId = ('tempid_%s'):format(_source)
+                local tempId = getTempItemId(_source)
                 AddPickupServer({
                     id = tempId,
                     coords = vector3(0, 0, 0), -- tempcoords
@@ -503,7 +502,9 @@ AddEventHandler(
 RegisterServerEvent("redemrp_inventory:AddPickupServer")
 AddEventHandler(
     "redemrp_inventory:AddPickupServer",
-    function(tempId, itemCoords, netId)
+    function(itemCoords, netId)
+        local playerId = source
+        local tempId = getTempItemId(playerId)
         local data = DroppedItems[tempId]
         if data then
             DroppedItems[netId] = {
@@ -1464,7 +1465,7 @@ function SharedInventoryFunctions.getItem(source, name, meta)
                         output = addItem(name, canBeAdded, data.ItemMeta, identifier, charid, lvl)
                         if amount - canBeAdded > 0 then
                             if makepickup == nil or makepickup == true then
-                                local tempId = ('tempid_%s'):format(_source)
+                                local tempId = getTempItemId(_source)
                                 AddPickupServer({
                                     id = tempId,
                                     coords = vector3(0, 0, 0), -- tempcoords
@@ -1476,13 +1477,12 @@ function SharedInventoryFunctions.getItem(source, name, meta)
                                 })
                                 TriggerClientEvent(
                                     "redemrp_inventory:CreatePickup",
-                                    _source,
-                                    tempId
+                                    _source
                                 )
                             end
                         end
                     else
-                        local tempId = ('tempid_%s'):format(_source)
+                        local tempId = getTempItemId(_source)
                         AddPickupServer({
                             id = tempId,
                             coords = vector3(0, 0, 0), -- tempcoords
@@ -1547,7 +1547,7 @@ function SharedInventoryFunctions.getItem(source, name, meta)
                             if makepickup == nil or makepickup == true then
                                 output = addItem(name, canBeAdded, meta, identifier, charid, lvl)
 
-                                local tempId = ('tempid_%s'):format(_source)
+                                local tempId = getTempItemId(_source)
                                 AddPickupServer({
                                     id = tempId,
                                     coords = vector3(0, 0, 0), -- tempcoords
@@ -1570,7 +1570,7 @@ function SharedInventoryFunctions.getItem(source, name, meta)
                         local freeWeight = Config.MaxWeight - InventoryWeight[identifier .. "_" .. charid]
                         if freeWeight < data.ItemInfo.weight then
                             
-                            local tempId = ('tempid_%s'):format(_source)
+                            local tempId = getTempItemId(_source)
                             AddPickupServer({
                                 id = tempId,
                                 coords = vector3(0, 0, 0), -- tempcoords
@@ -1930,4 +1930,8 @@ function CheckForSingleBlueprintMultipleCollisions(inputSlots)
     end
 
     return IterateThroughBlueprints(inputSlots, nextc)
+end
+
+function getTempItemId(playerId)
+    return ('tempid_%s'):format(playerId)
 end
